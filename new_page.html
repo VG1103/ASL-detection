@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Questions</title>
+</head>
+<body>
+  <!-- Container to display the quiz questions -->
+  <div id="question-container"></div>
+
+  <!-- External library (Papa Parse) to parse CSV data -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+  <script>
+    // Function to get the value of a query parameter from the URL
+    function getQueryParam(param) {
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      return urlParams.get(param);
+    }
+  
+    // Function to get random questions from an array
+    function getRandomQuestions(array, count) {
+      const shuffledArray = array.sort(() => Math.random() - 0.5);
+      return shuffledArray.slice(0, count);
+    }
+
+    // Fetch the CSV file containing all quiz questions using the fetch API
+    fetch('ClassMarker_all_questions - csv.csv')
+      .then(response => response.text())
+      .then(data => {
+        // Parse the CSV data into an array of objects (questions)
+        const questions = Papa.parse(data, { header: true, skipEmptyLines: true }).data;
+
+        const selectedSubCategory = getQueryParam('subCategory');
+
+        // Filter questions based on the selected subcategory
+        const filteredQuestions = questions.filter(question => question['Category'] === selectedSubCategory);
+
+        // Select 20 random questions from the filtered questions
+        const randomQuestions = getRandomQuestions(filteredQuestions, 20);
+
+        // Display the selected questions on the page
+        displayQuestions(randomQuestions);
+      })
+      .catch(error => {
+        console.error('Error fetching the CSV file:', error);
+      });
+
+    // Function to display questions on the page
+    function displayQuestions(questions) {
+      const container = document.getElementById('question-container');
+     
+      // Loop through each question and create HTML elements to display them
+      questions.forEach(question => {
+        const questionElement = document.createElement('div');
+        questionElement.innerHTML = `
+          <h3>${question['Question']}</h3>
+          <p>Parent Category: ${question['Parent Category']}</p>
+          <p>Category: ${question['Category']}</p>
+          <ul>
+            <li>Answer A: ${question['Answer A']}</li>
+            <li>Answer B: ${question['Answer B']}</li>
+            <li>Answer C: ${question['Answer C']}</li>
+            <li>Answer D: ${question['Answer D']}</li>
+          </ul>
+          <p>Correct Answer: ${question['Correct']}</p>
+          <p>Correct Feedback: ${question['Correct Feedback']}</p>
+          <p>Incorrect Feedback: ${question['Incorrect Feedback']}</p>
+          <p>Points: ${question['Points']}</p>
+          <hr>
+        `;
+
+        // Add the newly created question element to the container on the webpage
+        container.appendChild(questionElement);
+      });
+    }
+  </script>
+</body>
+</html>
